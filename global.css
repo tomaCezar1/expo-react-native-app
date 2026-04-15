@@ -4,6 +4,7 @@
 
 @import 'nativewind/theme';
 
+/* stylelint-disable at-rule-no-unknown */
 @theme {
   --color-background: #fff9e3;
   --color-foreground: #081126;
