@@ -11,6 +11,8 @@ config.resolver = config.resolver || {};
 config.resolver.alias = {
   ...(config.resolver.alias || {}),
   '@': path.resolve(__dirname, 'src'),
+  '@/assets': path.resolve(__dirname, 'assets'),
+  '@/global.css': path.resolve(__dirname, 'global.css'),
 };
 
 module.exports = withNativewind(config);
