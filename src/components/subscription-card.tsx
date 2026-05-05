@@ -14,6 +14,8 @@ interface SubscriptionCardProps extends Omit<Subscription, 'id'> {
   isCancelling?: boolean;
 }
 
+const NOT_PROVIDED = 'Not provided';
+
 const SubscriptionCard = ({
   name,
   price,
@@ -71,7 +73,7 @@ const SubscriptionCard = ({
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
-                  {paymentMethod?.trim()}
+                  {paymentMethod?.trim() ?? NOT_PROVIDED}
                 </Text>
               </View>
             </View>
@@ -84,7 +86,7 @@ const SubscriptionCard = ({
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
-                  {category?.trim() || plan?.trim()}
+                  {category?.trim() || plan?.trim() || NOT_PROVIDED}
                 </Text>
               </View>
             </View>
@@ -97,7 +99,9 @@ const SubscriptionCard = ({
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
-                  {startDate ? formatSubscriptionDateTime(startDate) : ''}
+                  {startDate
+                    ? formatSubscriptionDateTime(startDate)
+                    : NOT_PROVIDED}
                 </Text>
               </View>
             </View>
@@ -110,7 +114,9 @@ const SubscriptionCard = ({
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
-                  {renewalDate ? formatSubscriptionDateTime(renewalDate) : ''}
+                  {renewalDate
+                    ? formatSubscriptionDateTime(renewalDate)
+                    : NOT_PROVIDED}
                 </Text>
               </View>
             </View>
@@ -123,7 +129,7 @@ const SubscriptionCard = ({
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
-                  {status ? formatStatusLabel(status) : ''}
+                  {status ? formatStatusLabel(status) : NOT_PROVIDED}
                 </Text>
               </View>
             </View>
