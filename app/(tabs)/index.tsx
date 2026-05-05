@@ -28,10 +28,8 @@ export default function App() {
     'MM/DD',
   );
 
-  const handleSubscriptionPress = () => {
-    setExpandedSubscriptionId((currentId) =>
-      currentId === HOME_SUBSCRIPTIONS[0].id ? null : HOME_SUBSCRIPTIONS[0].id,
-    );
+  const handleSubscriptionPress = (id: string) => {
+    setExpandedSubscriptionId((currentId) => (currentId === id ? null : id));
   };
 
   return (
@@ -84,7 +82,7 @@ export default function App() {
           <SubscriptionCard
             {...item}
             expanded={expandedSubscriptionId === item.id}
-            onPress={handleSubscriptionPress}
+            onPress={() => handleSubscriptionPress(item.id)}
           />
         )}
         keyExtractor={(item) => item.id}
@@ -94,6 +92,7 @@ export default function App() {
         ListEmptyComponent={
           <Text className="home-empty-state">No Subscriptions yet.</Text>
         }
+        contentContainerClassName="pb-30"
       />
     </SafeAreaView>
   );
