@@ -54,18 +54,8 @@ const SignUp = () => {
 
     if (signUp.status === 'complete') {
       await signUp.finalize({
-        navigate: ({ session, decorateUrl }) => {
-          if (session?.currentTask) return;
-          const url = decorateUrl('/(tabs)');
-          if (url.startsWith('http')) {
-            if (typeof window !== 'undefined' && window.location) {
-              window.location.href = url;
-            } else {
-              router.replace('/(tabs)' as Href);
-            }
-          } else {
-            router.replace(url as Href);
-          }
+        navigate: () => {
+          router.replace('/' as Href);
         },
       });
     }
