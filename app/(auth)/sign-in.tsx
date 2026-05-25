@@ -1,6 +1,7 @@
 import { useSignIn } from '@clerk/expo';
 import { Link, useRouter, type Href } from 'expo-router';
 import { styled } from 'nativewind';
+import { usePostHog } from 'posthog-react-native';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -18,6 +19,7 @@ const SafeAreaView = styled(RNSafeAreaView);
 const SignIn = () => {
   const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
+  const posthog = usePostHog();
 
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
@@ -40,10 +42,18 @@ const SignIn = () => {
 
     if (error) {
       console.error(JSON.stringify(error, null, 2));
+      posthog.capture('user_sign_in_failed', {
+        error_code: error.code,
+      });
       return;
     }
 
     if (signIn.status === 'complete') {
+      const userId = signIn.createdSessionId ?? signIn.identifier;
+      posthog.identify(userId, {
+        $set_once: { first_sign_in_date: new Date().toISOString() },
+      });
+      posthog.capture('user_signed_in', { method: 'password' });
       await signIn.finalize({
         navigate: () => {
           router.replace('/' as Href);
@@ -63,6 +73,11 @@ const SignIn = () => {
     await signIn.mfa.verifyEmailCode({ code });
 
     if (signIn.status === 'complete') {
+      const userId = signIn.createdSessionId ?? signIn.identifier;
+      posthog.identify(userId, {
+        $set_once: { first_sign_in_date: new Date().toISOString() },
+      });
+      posthog.capture('user_signed_in', { method: 'mfa_email_code' });
       await signIn.finalize({
         navigate: () => {
           router.replace('/' as Href);
@@ -259,7 +274,9 @@ const SignIn = () => {
             </View>
 
             <View className="auth-link-row">
-              <Text className="auth-link-copy">Don't have an account?</Text>
+              <Text className="auth-link-copy">
+                Don&apos;t have an account?
+              </Text>
               <Link href="/(auth)/sign-up" asChild>
                 <Pressable>
                   <Text className="auth-link">Create Account</Text>
