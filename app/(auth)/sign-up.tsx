@@ -1,6 +1,7 @@
 import { useAuth, useSignUp } from '@clerk/expo';
 import { Link, useRouter, type Href } from 'expo-router';
 import { styled } from 'nativewind';
+import { usePostHog } from 'posthog-react-native';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -19,6 +20,7 @@ const SignUp = () => {
   const { signUp, errors, fetchStatus } = useSignUp();
   const { isSignedIn } = useAuth();
   const router = useRouter();
+  const posthog = usePostHog();
 
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
@@ -41,6 +43,9 @@ const SignUp = () => {
 
     if (error) {
       console.error(JSON.stringify(error, null, 2));
+      posthog.capture('user_sign_up_failed', {
+        error_code: error.code,
+      });
       return;
     }
 
@@ -53,6 +58,13 @@ const SignUp = () => {
     await signUp.verifications.verifyEmailCode({ code });
 
     if (signUp.status === 'complete') {
+      const userId = signUp.createdUserId;
+      if (userId) {
+        posthog.identify(userId, {
+          $set_once: { sign_up_date: new Date().toISOString() },
+        });
+      }
+      posthog.capture('user_signed_up');
       await signUp.finalize({
         navigate: () => {
           router.replace('/' as Href);
