@@ -1,19 +1,22 @@
+import CreateSubscriptionModal from '@/components/CreateSubscriptionModal';
 import ListHeading from '@/components/list-heading';
 import SubscriptionCard from '@/components/subscription-card';
 import UpcomingSubscription from '@/components/upcoming-subscription';
 import {
   HOME_BALANCE,
-  HOME_SUBSCRIPTIONS,
   HOME_USER,
   UPCOMING_SUBSCRIPTIONS,
 } from '@/constants/data';
 import { icons } from '@/constants/icons';
 import images from '@/constants/images';
+import { useSubscriptionsStore } from '@/store/subscriptionsStore';
+import type { Subscription } from '@/types/data';
 import { formatCurrency } from '@/utils/utils';
 import dayjs from 'dayjs';
 import { styled } from 'nativewind';
+import { usePostHog } from 'posthog-react-native';
 import { useState } from 'react';
-import { FlatList, Image, Text, View } from 'react-native';
+import { FlatList, Image, Pressable, Text, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 
 const SafeAreaView = styled(RNSafeAreaView);
@@ -22,18 +25,37 @@ export default function App() {
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
     string | null
   >(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const subscriptions = useSubscriptionsStore((s) => s.subscriptions);
+  const addSubscription = useSubscriptionsStore((s) => s.addSubscription);
+  const posthog = usePostHog();
 
   const formattedCurrency = formatCurrency(HOME_BALANCE.amount, 'mdl');
   const formattedRenewalDate = dayjs(HOME_BALANCE.nextRenewalDate).format(
     'MM/DD',
   );
 
+  const handleSubscriptionCreated = (subscription: Subscription) => {
+    addSubscription(subscription);
+  };
+
   const handleSubscriptionPress = (id: string) => {
+    const isExpanding = expandedSubscriptionId !== id;
     setExpandedSubscriptionId((currentId) => (currentId === id ? null : id));
+    if (isExpanding) {
+      posthog.capture('subscription_expanded', { subscription_id: id });
+    } else {
+      posthog.capture('subscription_collapsed', { subscription_id: id });
+    }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-background p-5">
+      <CreateSubscriptionModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSubmit={handleSubscriptionCreated}
+      />
       <FlatList
         ListHeaderComponent={() => (
           <>
@@ -43,7 +65,9 @@ export default function App() {
                 <Text className="home-user-name">{HOME_USER.name}</Text>
               </View>
 
-              <Image source={icons.add} className="home-add-icon" />
+              <Pressable onPress={() => setModalVisible(true)}>
+                <Image source={icons.add} className="home-add-icon" />
+              </Pressable>
             </View>
 
             <View className="home-balance-card">
@@ -77,7 +101,7 @@ export default function App() {
             <ListHeading title="All Subscriptions" />
           </>
         )}
-        data={HOME_SUBSCRIPTIONS}
+        data={subscriptions}
         renderItem={({ item }) => (
           <SubscriptionCard
             {...item}
