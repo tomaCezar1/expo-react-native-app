@@ -1,3 +1,4 @@
+import { posthog } from '@/config/posthog';
 import { icons } from '@/constants/icons';
 import type { Subscription } from '@/types/data';
 import clsx from 'clsx';
@@ -84,6 +85,14 @@ export default function CreateSubscriptionModal({
     } as Subscription & { frequency: Frequency };
 
     onSubmit(newSubscription);
+
+    posthog.capture('subscription_created', {
+      subscription_name: name.trim(),
+      subscription_category: category,
+      subscription_price: price,
+      subscription_frequency: frequency,
+    });
+
     resetForm();
     onClose();
   };
